@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Access</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap');
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --green:#00ff41; --dim:#00b32c; --red:#ff003c; --yellow:#ffe000; }
+
+body {
+background: #0a0a0a;
+color: var(–green);
+font-family: ‘Share Tech Mono’, monospace;
+overflow: hidden;
+height: 100vh; width: 100vw;
+cursor: none;
+}
+
+body::after {
+content:’’; position:fixed; inset:0;
+background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px);
+pointer-events:none; z-index:9999;
+animation: flicker 0.1s infinite;
+}
+@keyframes flicker { 50%{opacity:.95} }
+
+#mc { position:fixed; inset:0; opacity:.2; z-index:0; }
+
+#term {
+position:relative; z-index:10;
+height:100vh; width:100vw;
+padding:14px 18px;
+overflow:hidden;
+display:flex; flex-direction:column; gap:1px;
+}
+
+.L {
+font-size: clamp(11px,1.55vw,13px);
+line-height:1.45; white-space:pre;
+opacity:0; animation:fi .02s forwards;
+}
+@keyframes fi { to{opacity:1} }
+
+.p { color:var(–dim); }
+.i { color:#00cc33; }
+.w { color:var(–yellow); }
+.e { color:var(–red); }
+.s { color:#00ffaa; }
+.d { color:#4dff91; font-size:clamp(9px,1.3vw,11px); }
+
+/* ALERT */
+#ab {
+display:none; position:fixed; inset:0; z-index:100;
+background:rgba(0,0,0,0.94);
+flex-direction:column; align-items:center; justify-content:center;
+gap:18px; text-align:center; padding:28px;
+}
+#ab.on { display:flex; }
+
+#at {
+font-family:‘VT323’,monospace;
+font-size:clamp(46px,11vw,108px);
+color:var(–red);
+animation:pr .4s infinite alternate;
+letter-spacing:4px;
+}
+@keyframes pr {
+from{text-shadow:0 0 18px var(–red);opacity:1}
+to  {text-shadow:0 0 80px var(–red),0 0 150px #f00;opacity:.8}
+}
+
+#as {
+font-family:‘VT323’,monospace;
+font-size:clamp(20px,4vw,36px);
+color:var(–yellow);
+text-shadow:0 0 12px var(–yellow);
+max-width:740px; line-height:1.4;
+}
+
+#af {
+font-family:‘Share Tech Mono’,monospace;
+font-size:clamp(10px,1.5vw,13px);
+color:#ff6688; max-width:640px;
+text-align:left; white-space:pre; line-height:1.7;
+}
+
+#ac {
+font-family:‘VT323’,monospace;
+font-size:clamp(18px,3vw,30px);
+color:#ff4466;
+animation:bl .8s infinite;
+}
+@keyframes bl { 50%{opacity:.08} }
+
+#pb { position:fixed; bottom:0; left:0; right:0; height:4px; background:#111; z-index:50; }
+#pf { height:100%; width:0%; background:linear-gradient(90deg,var(–green),#00ffaa); box-shadow:0 0 8px var(–green); }
+
+#ig {
+display:none; position:fixed; top:10px; right:14px; z-index:20;
+font-size:clamp(9px,1.1vw,11px); color:#00aa28;
+border:1px solid #00aa28; padding:7px 11px;
+background:rgba(0,10,4,.9); line-height:1.75;
+}
+</style>
+
+</head>
+<body>
+
+<canvas id="mc"></canvas>
+
+<div id="ig">
+  TARGET IP: <span id="ipd">---.---.---.---</span><br>
+  LOCATION:  <span id="locd">Resolving...</span><br>
+  FIREWALL:  <span style="color:var(--red)">BYPASSED ✓</span><br>
+  ENCRYPTED: <span style="color:var(--green)">AES-256</span>
+</div>
+
+<div id="term"></div>
+<div id="pb"><div id="pf"></div></div>
+
+<div id="ab">
+  <div id="at">⚠ SYSTEM COMPROMISED ⚠</div>
+  <div id="as">ALL FILES ENCRYPTED & UPLOADED<br>REMOTE ACCESS ESTABLISHED</div>
+  <div id="af"></div>
+  <div id="ac">● LIVE CONNECTION ACTIVE</div>
+</div>
+
+<script>
+// Matrix
+const cv = document.getElementById('mc');
+const cx = cv.getContext('2d');
+cv.width = window.innerWidth; cv.height = window.innerHeight;
+const cols = Math.floor(cv.width/16);
+const drops = Array(cols).fill(1);
+const ch = 'アイウエカキクケ0123456789ABCDEF$#@%&*!><|/\\';
+function dm(){
+  cx.fillStyle='rgba(10,10,10,0.07)';
+  cx.fillRect(0,0,cv.width,cv.height);
+  drops.forEach((y,i)=>{
+    cx.fillStyle = i%5===0?'#00ffaa':'#00ff41';
+    cx.font='14px Share Tech Mono';
+    cx.fillText(ch[Math.floor(Math.random()*ch.length)],i*16,y*16);
+    if(y*16>cv.height&&Math.random()>.975) drops[i]=0;
+    drops[i]++;
+  });
+}
+setInterval(dm,25);
+
+const term = document.getElementById('term');
+const pf   = document.getElementById('pf');
+let lc=0, MAX=44;
+
+// Dump ALL lines instantly with tiny stagger
+function q(text, cls, t){
+  setTimeout(()=>{
+    if(lc>=MAX){ const f=term.querySelector('.L'); if(f) term.removeChild(f); } else lc++;
+    const el=document.createElement('div');
+    el.className='L '+cls; el.textContent=text;
+    term.appendChild(el);
+    term.scrollTop=term.scrollHeight;
+  }, t);
+}
+
+function prog(from,to,ms,startT){
+  setTimeout(()=>{
+    const steps=15, step=ms/steps; let s=0;
+    const iv=setInterval(()=>{
+      s++; pf.style.width=(from+(to-from)*(s/steps))+'%';
+      if(s>=steps) clearInterval(iv);
+    },step);
+  }, startT);
+}
+
+function rip(){ return Array(4).fill(0).map(()=>Math.floor(Math.random()*254)+1).join('.'); }
+function rhx(n=32){ return Array(n).fill(0).map(()=>Math.floor(Math.random()*16).toString(16)).join(''); }
+
+const locs=['Moscow, RU','Beijing, CN','Pyongyang, KP','Bucharest, RO','Tehran, IR'];
+const files=['passwords.txt','bank_details.csv','private_keys.json','browser_history.db','wallet_seed.txt','tax_returns_2024.pdf','contacts_backup.vcf','photos_private.zip','work_secrets.docx'];
+
+const ip  = rip();
+const loc = locs[Math.floor(Math.random()*locs.length)];
+document.getElementById('ipd').textContent  = ip;
+document.getElementById('locd').textContent = loc;
+
+// ── ALL lines queued up front, T = 28ms between each ──
+const T = 28; // ← blazing fast
+let t = 0;
+
+q('root@shadownet:~# ./exploit_v9.sh --target auto --silent','p', t);
+q('[*] Initializing payload engine...','i',           t+=T);
+q('[*] Kernel modules loaded... OK','i',              t+=T);
+q('[*] MAC spoof: '+rhx(12).match(/.{2}/g).join(':'),'d', t+=T);
+q('[*] TOR chain: '+rip()+' → '+rip()+' → '+rip(),'d', t+=T);
+q('[+] Anonymized. Trace: 0.0003%','s',              t+=T);
+
+setTimeout(()=>document.getElementById('ig').style.display='block', t+10);
+
+q(`[*] Target: ${ip} (${loc})`,'w',                  t+=T);
+q('[*] OS: Windows 11 Pro x64 Build 26100','d',      t+=T);
+q('[*] Ports open: 22 80 135 443 3389 8080','d',     t+=T);
+q('[!] CVE-2024-38213 — RCE CONFIRMED','w',          t+=T);
+q('[*] Injecting shellcode...','i',                   t+=T);
+
+prog(0,40,300, t+T);
+t += T + 320;
+
+q('[+] SHELL: NT AUTHORITY\\SYSTEM','s',             t);
+q('[*] Defender OFF | Tamper OFF | Monitor OFF','e', t+=T);
+q('[*] Dumping LSASS...','i',                        t+=T);
+q('  [HASH] Admin:  '+rhx(32),'d',                   t+=T);
+q('  [HASH] SYSTEM: '+rhx(32),'d',                   t+=T);
+q('  [HASH] Guest:  '+rhx(32),'d',                   t+=T);
+
+prog(40,70,280, t+T);
+t += T + 300;
+
+q('[*] Remote filesystem mounted','i',               t);
+q('[*] Scanning Documents...','i',                   t+=T);
+
+const sh=[...files].sort(()=>Math.random()-.5).slice(0,6);
+sh.forEach(f=>{ q(`  [GRAB] C:\\Users\\User\\Documents\\${f}`,'e', t+=T); });
+
+q('[*] Encrypting payload...','w',                   t+=T);
+
+prog(70,92,280, t+T);
+t += T + 300;
+
+q(`[*] Upload → C2 ${rip()}:4444`,'i',              t);
+q('[*] ████████████████████ 100% ✓','s',             t+=T);
+
+prog(92,100,200, t+T);
+t += T + 250;
+
+// FIRE THE ALERT
+setTimeout(()=>{
+  document.getElementById('af').textContent = 'FILES STOLEN:\n'+sh.map(f=>'  → '+f).join('\n');
+  document.getElementById('ab').classList.add('on');
+}, t+60);
+</script>
+
+</body>
+</html>
